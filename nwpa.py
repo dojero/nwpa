@@ -108,8 +108,9 @@ def start_wpa_supplicant():
     return
 
 def start_dhcpcd():
-    command = g(f'sudo systemctl start dhcpcd@{device_name}')
-    sp.run(command)
+    command = g(f'sudo dhcpcd {device_name}')
+#    command = g(f'sudo systemctl start dhcpcd@{device_name}')
+    sp.run(command, text = True, stdout = sp.PIPE, stderr = sp.PIPE)
 
 def check_internet():
     print('\nProgram will terminate when Internet connection is verified')
@@ -129,9 +130,15 @@ def check_internet():
     return yesno
 
 def get_lan_ip():
-    ipaddress = '127.0.0.2'
-    while ipaddress.split('.')[0] == '127':
-        ipaddress = socket.gethostbyname(f'{socket.gethostname()}')
+    ipaddress = '0.0.0.0'
+    while ipaddress == '0.0.0.0':
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        try:
+            s.connect(('10.1.2.2',1))
+            ipaddress = s.getsockname()[0]
+        except OSError:
+            ipaddress = '0.0.0.0'
+    s.close()
     return ipaddress
 
 
